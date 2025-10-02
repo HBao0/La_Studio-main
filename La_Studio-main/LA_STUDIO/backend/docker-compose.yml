@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: la_studio_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: la_studio
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+
+  redis:
+    image: redis:7.0
+    container_name: la_studio_redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  backend:
+    build: ./LA_STUDIO/backend
+    container_name: la_studio_backend
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASS: yourpassword
+      DB_NAME: la_studio
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: your_jwt_secret
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mysql
+      - redis
+    restart: always

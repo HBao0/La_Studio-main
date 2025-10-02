@@ -5,7 +5,6 @@ const Product = require('../models/Product');
 const cache = require('../middleware/cache');
 const logger = require('../logger');
 
-// Search endpoint: optimized
 router.get('/search', cache(30), async (req, res) => {
   try {
     const q = (req.query.q || '').trim();
@@ -15,35 +14,28 @@ router.get('/search', cache(30), async (req, res) => {
     if (limit <= 0) limit = 20;
     const offset = (page - 1) * limit;
 
-    // Build WHERE + index
-    const where = [];
-    if (category) where.push({ category });
+    const where = {};
+    if (category) where.category = category;
     if (q) {
-      // Sử dụng index fulltext
-      const safeQ = q.replace(/[^0-9a-zA-Z\s]/g, ' ');
-      where.push(Sequelize.literal(`MATCH(name, description) AGAINST(${Sequelize.escape(safeQ)} IN NATURAL LANGUAGE MODE)`));
+      // Sử dụng LIKE khi không có fulltext index hoặc khi MySQL chưa hỗ trợ tiếng Việt tốt
+      where.name = { [Op.like]: `%${q}%` };
     }
 
-    // Chỉ select thuộc tính cần thiết
-    let attributes = ['product_id', 'name', 'slug', 'price', 'category', 'stock', 'images'];
-    if (q) {
-      attributes.push([Sequelize.literal(`MATCH(name, description) AGAINST(${Sequelize.escape(q)} IN NATURAL LANGUAGE MODE)`), 'score']);
-    }
-
-    // Truy vấn tối ưu + phân trang
-    const { rows, count } = await Product.findAndCountAll({
-      where: where.length ? { [Op.and]: where } : undefined,
-      attributes,
+    const products = await Product.findAll({
+      where,
+      attributes: ['product_id', 'name', 'price', 'category', 'stock', 'images', 'description'],
       limit,
       offset,
-      order: [[Sequelize.literal('score'), 'DESC'], ['created_at', 'DESC']],
+      order: [['created_at', 'DESC']],
       raw: true
     });
 
-    // Log thời gian phản hồi
-    logger.info('Search performed', { q, category, page, limit, resultCount: rows.length });
-
-    res.json({ total: count, page, limit, data: rows });
+    res.json({
+      total: products.length,
+      page,
+      limit,
+      data: products
+    });
   } catch (err) {
     logger.error('Search error', err);
     res.status(500).json({ error: 'Internal server error' });
