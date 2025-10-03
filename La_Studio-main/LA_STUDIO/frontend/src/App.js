@@ -2,7 +2,7 @@ import React, { Fragment } from 'react';
 import { BrowserRouter as Router, Routes, Route} from 'react-router-dom'
 import DefaultComponent from './components/DefaultComponent/DefaultComponent';
 import { routes} from './routes'
-
+import ProfilePage from './pages/ProfilePage';
 function App() {
   return (
     <div>
@@ -19,6 +19,7 @@ function App() {
               } />  
             )
           })}
+            <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </Router>
     </div>

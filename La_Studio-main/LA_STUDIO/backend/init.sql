@@ -10,6 +10,15 @@ CREATE TABLE IF NOT EXISTS products (
     description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(200),
+  email VARCHAR(200) UNIQUE,
+  phone VARCHAR(50),
+  address TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
 -- Tạo FULLTEXT INDEX cho tìm kiếm nhanh
 CREATE FULLTEXT INDEX idx_name_desc ON products(name, description);

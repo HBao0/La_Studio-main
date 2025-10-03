@@ -4,10 +4,10 @@ services:
     image: mysql:8.0
     container_name: la_studio_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_ROOT_PASSWORD: bao
       MYSQL_DATABASE: la_studio
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: always
@@ -20,7 +20,7 @@ services:
     restart: always
 
   backend:
-    build: ./LA_STUDIO/backend
+    build: .
     container_name: la_studio_backend
     environment:
       DB_HOST: mysql

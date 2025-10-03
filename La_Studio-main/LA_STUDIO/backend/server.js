@@ -10,6 +10,8 @@ const logger = require('./logger');
 const productRoutes = require('./routes/productRoutes');
 const redis = require('./utils/redisClient');
 const Admin = require('./models/Admin');
+const userRoutes = require('./routes/userRoutes');
+const auth = require('./middleware/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
@@ -21,13 +23,22 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-
+app.use('/api/users', userRoutes);
 // rate limit (cho public API)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
 });
+
 app.use(limiter);
+
+// Route trả về thông tin user từ JWT
+app.get('/api/auth/me', auth, (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Chưa đăng nhập' });
+  }
+  res.json(req.user);
+});
 
 // Routes
 app.use('/api/products', productRoutes);
@@ -47,12 +58,12 @@ app.post('/api/login', async (req, res) => {
     }
 
     // Tạo JWT token
-    const token = jwt.sign({ id: admin.id, role: admin.role }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ admin_id: admin.admin_id, email: admin.email }, JWT_SECRET, { expiresIn: '1h' });
 
     res.json({
       success: true,
       token,
-      user: { id: admin.id, email: admin.email, role: admin.role }
+      user: { admin_id: admin.admin_id, email: admin.email }
     });
   } catch (err) {
     logger.error('Login error', err);
