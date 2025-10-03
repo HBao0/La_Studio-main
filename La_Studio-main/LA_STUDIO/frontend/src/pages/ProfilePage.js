@@ -6,7 +6,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     // Gọi API backend để lấy thông tin user hiện tại
-  axios.get("http://localhost:5000/api/auth/me", { withCredentials: true })
+  axios.get("http://localhost:4000/api/auth/me", { withCredentials: true })
       .then(res => setUser(res.data))
       .catch(err => setUser(null));
   }, []);
